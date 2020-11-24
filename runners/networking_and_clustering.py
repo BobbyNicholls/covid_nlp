@@ -27,6 +27,7 @@ Step 7: A network is drawn and visualised, a max weighted spanning tree drawn an
 
 from utils.data_utils import import_toy_set
 from utils.text_preprocessing_utils import normalise, tokenise
+from utils.text_analysis_utils import get_cluster
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
@@ -49,11 +50,9 @@ tf_idf_df = pd.DataFrame(
     tf_idf_matrix.toarray(), columns=vectorizer.get_feature_names()
 )
 
-cosine_similarity_array = cosine_similarity(tf_idf_df)
+# cosine_similarity_array = cosine_similarity(tf_idf_df)
 
-kmeans = KMeans(n_clusters=2, random_state=0).fit(tf_idf_matrix.toarray())
+kmeans = KMeans(n_clusters=10, random_state=0).fit(tf_idf_matrix.toarray())
 
-kmeans.cluster_centers_
-
-kmeans.predict()
+raw_text_df['doc_cluster'] = tf_idf_df.apply(get_cluster, args=[kmeans], axis=1)
 
