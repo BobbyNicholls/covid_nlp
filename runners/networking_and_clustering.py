@@ -33,6 +33,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 from networkx.convert_matrix import from_numpy_array
 from networkx.algorithms.tree import maximum_spanning_edges
+from wordcloud import WordCloud
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -62,7 +63,9 @@ clustered_documents_df = pd.DataFrame(
 )
 
 raw_clustered_documents = list(clustered_documents_df["snippet"])
-processed_clustered_documents = [normalise(tokenise(document)) for document in raw_clustered_documents]
+processed_clustered_documents = [
+    normalise(tokenise(document)) for document in raw_clustered_documents
+]
 processed_clustered_documents = [" ".join(x) for x in processed_clustered_documents]
 
 vectorizer = TfidfVectorizer()
@@ -76,7 +79,7 @@ for i in range(len(clustered_cosine_similarity_array)):
     clustered_cosine_similarity_array[i][i] = 0
 
 G = from_numpy_array(clustered_cosine_similarity_array)
-plt.figure(figsize=(7,7))
+plt.figure(figsize=(7, 7))
 nx.draw(G, node_size=200, node_color="y", with_labels=False)
 plt.show()
 
@@ -86,7 +89,15 @@ mst = nx.Graph()
 for edge in mst_edges:
     mst.add_edge(edge[0], edge[1], weight=1)
 
-plt.figure(figsize=(7,7))
+plt.figure(figsize=(7, 7))
 nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
+
+wc = WordCloud()
+for doc in raw_clustered_documents:
+    wc.generate(doc)
+    plt.imshow(wc)
+
+wc.generate(raw_clustered_documents[4])
+plt.imshow(wc)
 
