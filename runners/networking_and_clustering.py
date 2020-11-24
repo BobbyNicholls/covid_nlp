@@ -51,7 +51,7 @@ tf_idf_df = pd.DataFrame(
 
 cosine_similarity_array = cosine_similarity(tf_idf_df)
 
-kmeans = KMeans(n_clusters=2, random_state=0).fit(cosine_similarity_array)
+kmeans = KMeans(n_clusters=2, random_state=0).fit(tf_idf_matrix.toarray())
 
 kmeans.cluster_centers_
 
