@@ -26,13 +26,15 @@ Step 7: A network is drawn and visualised, a max weighted spanning tree drawn an
 """
 
 from utils.data_utils import import_toy_set
-from utils.text_preprocessing_utils import normalise
-
-import pandas as pd
+from utils.text_preprocessing_utils import normalise, tokenise
 
 raw_text_df = import_toy_set()
 
-raw_documents = raw_text_df['snippet'].astype(str)
+raw_documents = list(raw_text_df['snippet'])
 
-words = normalise(words)
+words = ['this', 'is', 'many', 'sentences', 'with', '0', 'context']
+
+processed_documents = [normalise(tokenise(document)) for document in raw_documents]
+processed_documents[10]
+
 

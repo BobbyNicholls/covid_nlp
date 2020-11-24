@@ -7,6 +7,13 @@ import re
 from nltk.stem import LancasterStemmer
 from nltk.stem import WordNetLemmatizer
 import unicodedata
+import inflect
+from nltk.tokenize import word_tokenize
+
+
+def tokenise(string):
+    return word_tokenize(string)
+
 
 def remove_non_ascii(words):
     """Remove non-ASCII characters from list of tokenized words"""
@@ -41,7 +48,7 @@ def remove_punctuation(words):
 
 
 def replace_numbers(words):
-    """Replace all interger occurrences in list of tokenized words with textual representation"""
+    """Replace all integer occurrences in list of tokenized words with textual representation"""
     p = inflect.engine()
     new_words = []
     for word in words:
@@ -57,7 +64,7 @@ def remove_stopwords(words):
     """Remove stop words from list of tokenized words"""
     new_words = []
     for word in words:
-        if word not in stopwords.words("english"):
+        if word not in stopwords:
             new_words.append(word)
     return new_words
 
@@ -76,10 +83,12 @@ def lemmatize_words(words):
     return lemmas
 
 
-def normalize(words):
+def normalise(words):
     words = remove_non_ascii(words)
     words = to_lowercase(words)
     words = remove_punctuation(words)
     words = replace_numbers(words)
     words = remove_stopwords(words)
+    # words = stem_words(words)
+    words = lemmatize_words(words)
     return words
