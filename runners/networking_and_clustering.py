@@ -25,9 +25,9 @@ Step 7: A network is drawn and visualised, a max weighted spanning tree drawn an
 
 """
 
-from utils.data_utils import import_toy_set
+from utils.data_utils import import_5k_covid_toy_set
 from utils.text_preprocessing_utils import normalise, tokenise
-from utils.text_analysis_utils import get_cluster
+from utils.text_analysis_utils import get_cluster, get_common_words
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
@@ -38,7 +38,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-raw_text_df = import_toy_set()
+raw_text_df = import_5k_covid_toy_set()
 
 raw_documents = list(raw_text_df["snippet"])
 processed_documents = [normalise(tokenise(document)) for document in raw_documents]
@@ -94,10 +94,7 @@ nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
 
 wc = WordCloud()
-for doc in raw_clustered_documents:
-    wc.generate(doc)
-    plt.imshow(wc)
-
 wc.generate(raw_clustered_documents[4])
 plt.imshow(wc)
 
+get_common_words(raw_clustered_documents[9])
