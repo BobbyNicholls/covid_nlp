@@ -31,21 +31,20 @@ from utils.text_analysis_utils import get_cluster
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
+from networkx.convert_matrix import from_numpy_array
+from networkx.algorithms.tree import maximum_spanning_edges
+import networkx as nx
+import matplotlib.pyplot as plt
 import pandas as pd
 
 raw_text_df = import_toy_set()
 
 raw_documents = list(raw_text_df["snippet"])
-
-words = ["this", "is", "many", "sentences", "with", "0", "context"]
-
 processed_documents = [normalise(tokenise(document)) for document in raw_documents]
 processed_documents = [" ".join(x) for x in processed_documents]
 
-
 vectorizer = TfidfVectorizer()
 tf_idf_matrix = vectorizer.fit_transform(processed_documents)
-
 tf_idf_df = pd.DataFrame(
     tf_idf_matrix.toarray(), columns=vectorizer.get_feature_names()
 )
@@ -54,5 +53,40 @@ tf_idf_df = pd.DataFrame(
 
 kmeans = KMeans(n_clusters=10, random_state=0).fit(tf_idf_matrix.toarray())
 
-raw_text_df['doc_cluster'] = tf_idf_df.apply(get_cluster, args=[kmeans], axis=1)
+raw_text_df["doc_cluster"] = tf_idf_df.apply(get_cluster, args=[kmeans], axis=1)
+
+clustered_documents_df = pd.DataFrame(
+    raw_text_df.groupby(["doc_cluster"])["snippet"]
+    .transform(lambda x: " ".join(x))
+    .drop_duplicates()
+)
+
+raw_clustered_documents = list(clustered_documents_df["snippet"])
+processed_clustered_documents = [normalise(tokenise(document)) for document in raw_clustered_documents]
+processed_clustered_documents = [" ".join(x) for x in processed_clustered_documents]
+
+vectorizer = TfidfVectorizer()
+clustered_tf_idf_matrix = vectorizer.fit_transform(processed_clustered_documents)
+clustered_tf_idf_df = pd.DataFrame(
+    clustered_tf_idf_matrix.toarray(), columns=vectorizer.get_feature_names()
+)
+
+clustered_cosine_similarity_array = cosine_similarity(clustered_tf_idf_df)
+for i in range(len(clustered_cosine_similarity_array)):
+    clustered_cosine_similarity_array[i][i] = 0
+
+G = from_numpy_array(clustered_cosine_similarity_array)
+plt.figure(figsize=(7,7))
+nx.draw(G, node_size=200, node_color="y", with_labels=False)
+plt.show()
+
+mst_edges = maximum_spanning_edges(G)
+
+mst = nx.Graph()
+for edge in mst_edges:
+    mst.add_edge(edge[0], edge[1], weight=1)
+
+plt.figure(figsize=(7,7))
+nx.draw(mst, node_size=200, node_color="y", with_labels=True)
+plt.show()
 
