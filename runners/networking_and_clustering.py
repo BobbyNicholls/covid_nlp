@@ -84,7 +84,6 @@ nx.draw(G, node_size=200, node_color="y", with_labels=False)
 plt.show()
 
 mst_edges = maximum_spanning_edges(G)
-
 mst = nx.Graph()
 for edge in mst_edges:
     mst.add_edge(edge[0], edge[1], weight=1)
@@ -98,3 +97,5 @@ wc.generate(raw_clustered_documents[4])
 plt.imshow(wc)
 
 get_common_words(raw_clustered_documents[9])
+
+
