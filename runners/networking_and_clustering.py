@@ -93,7 +93,7 @@ nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
 
 wc = WordCloud()
-wc.generate(raw_clustered_documents[0])
+wc.generate(raw_clustered_documents[3])
 plt.imshow(wc)
 
 get_common_words(raw_clustered_documents[0])

@@ -3,6 +3,7 @@ Module for functions that analyse text
 """
 
 import pandas as pd
+from utils.text_preprocessing_utils import normalise, tokenise
 
 
 def get_cluster(row, kmeans):
