@@ -29,9 +29,11 @@ from utils.data_utils import import_reddit10k
 from utils.network_utils import get_max_spanning_tree
 from utils.text_preprocessing_utils import normalise, tokenise
 from utils.text_analysis_utils import get_cluster, get_common_words
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
+from textblob import TextBlob
 from networkx.convert_matrix import from_numpy_array
 from wordcloud import WordCloud
 import networkx as nx
@@ -93,10 +95,10 @@ nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
 
 wc = WordCloud()
-wc.generate(raw_clustered_documents[3])
+wc.generate(raw_clustered_documents[1])
 plt.imshow(wc)
 
-get_common_words(raw_clustered_documents[0])
+# get_common_words(raw_clustered_documents[0])
 
 cluster_count = raw_text_df["doc_cluster"].value_counts()
 plt.figure(figsize=(10, 5))
@@ -105,3 +107,6 @@ plt.title("Cluster counts")
 plt.ylabel("Number of Occurrences", fontsize=12)
 plt.xlabel("Cluster", fontsize=12)
 plt.show()
+
+blobs = [TextBlob(string) for string in raw_clustered_documents]
+sentiments = [blob.sentiment for blob in blobs]
