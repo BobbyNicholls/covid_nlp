@@ -25,22 +25,25 @@ Step 7: A network is drawn and visualised, a max weighted spanning tree drawn an
 
 """
 
-from utils.data_utils import import_5k_covid_toy_set
+from utils.data_utils import import_reddit10k
+from utils.network_utils import get_max_spanning_tree
 from utils.text_preprocessing_utils import normalise, tokenise
 from utils.text_analysis_utils import get_cluster, get_common_words
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 from networkx.convert_matrix import from_numpy_array
-from networkx.algorithms.tree import maximum_spanning_edges
 from wordcloud import WordCloud
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
-raw_text_df = import_5k_covid_toy_set()
+raw_text_df = import_reddit10k()
 
-raw_documents = list(raw_text_df["snippet"])
+TEXT_FIELD = "body"
+
+raw_documents = list(raw_text_df[TEXT_FIELD])
 processed_documents = [normalise(tokenise(document)) for document in raw_documents]
 processed_documents = [" ".join(x) for x in processed_documents]
 
@@ -57,12 +60,12 @@ kmeans = KMeans(n_clusters=10, random_state=0).fit(tf_idf_matrix.toarray())
 raw_text_df["doc_cluster"] = tf_idf_df.apply(get_cluster, args=[kmeans], axis=1)
 
 clustered_documents_df = pd.DataFrame(
-    raw_text_df.groupby(["doc_cluster"])["snippet"]
+    raw_text_df.groupby(["doc_cluster"])[TEXT_FIELD]
     .transform(lambda x: " ".join(x))
     .drop_duplicates()
 )
 
-raw_clustered_documents = list(clustered_documents_df["snippet"])
+raw_clustered_documents = list(clustered_documents_df[TEXT_FIELD])
 processed_clustered_documents = [
     normalise(tokenise(document)) for document in raw_clustered_documents
 ]
@@ -83,19 +86,21 @@ plt.figure(figsize=(7, 7))
 nx.draw(G, node_size=200, node_color="y", with_labels=False)
 plt.show()
 
-mst_edges = maximum_spanning_edges(G)
-mst = nx.Graph()
-for edge in mst_edges:
-    mst.add_edge(edge[0], edge[1], weight=1)
-
+mst = get_max_spanning_tree(G)
 plt.figure(figsize=(7, 7))
 nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
 
 wc = WordCloud()
-wc.generate(raw_clustered_documents[4])
+wc.generate(raw_clustered_documents[2])
 plt.imshow(wc)
 
 get_common_words(raw_clustered_documents[9])
 
-
+cluster_count = raw_text_df["doc_cluster"].value_counts()
+plt.figure(figsize=(10, 5))
+sns.barplot(cluster_count.index, cluster_count.values, alpha=0.8)
+plt.title("Cluster counts")
+plt.ylabel("Number of Occurrences", fontsize=12)
+plt.xlabel("Cluster", fontsize=12)
+plt.show()
