@@ -42,6 +42,7 @@ import seaborn as sns
 raw_text_df = import_reddit10k()
 
 TEXT_FIELD = "body"
+N_CLUSTERS = 5
 
 raw_documents = list(raw_text_df[TEXT_FIELD])
 processed_documents = [normalise(tokenise(document)) for document in raw_documents]
@@ -55,7 +56,7 @@ tf_idf_df = pd.DataFrame(
 
 # cosine_similarity_array = cosine_similarity(tf_idf_df)
 
-kmeans = KMeans(n_clusters=10, random_state=0).fit(tf_idf_matrix.toarray())
+kmeans = KMeans(n_clusters=N_CLUSTERS, random_state=0).fit(tf_idf_matrix.toarray())
 
 raw_text_df["doc_cluster"] = tf_idf_df.apply(get_cluster, args=[kmeans], axis=1)
 
@@ -92,10 +93,10 @@ nx.draw(mst, node_size=200, node_color="y", with_labels=True)
 plt.show()
 
 wc = WordCloud()
-wc.generate(raw_clustered_documents[2])
+wc.generate(raw_clustered_documents[0])
 plt.imshow(wc)
 
-get_common_words(raw_clustered_documents[9])
+get_common_words(raw_clustered_documents[0])
 
 cluster_count = raw_text_df["doc_cluster"].value_counts()
 plt.figure(figsize=(10, 5))
