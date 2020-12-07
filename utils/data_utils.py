@@ -44,7 +44,7 @@ def import_reddit_set(rows):
     """
     Get the set of reddit comments uploaded by Alex Cave
     :return:
-        dataframe of 'rows' rows of the dataset containing the body ofthe comment and date fields
+        dataframe of 'rows' rows of the dataset containing the body of the comment and date fields
     """
     client = bigquery.Client()
     sql = (
