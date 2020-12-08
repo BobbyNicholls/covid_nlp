@@ -40,7 +40,7 @@ def import_reddit10k():
     return raw_text_df
 
 
-def import_reddit_set(rows):
+def import_reddit_set(year, rows):
     """
     Get the set of reddit comments uploaded by Alex Cave
     :return:
@@ -48,7 +48,7 @@ def import_reddit_set(rows):
     """
     client = bigquery.Client()
     sql = (
-        "SELECT body, date FROM `goldenfleece.vaccine_poc.ps_reddit_comments_vaccine` LIMIT {}"
-    ).format(rows)
+        "SELECT body, TIMESTAMP_SECONDS(created_utc) as date FROM `goldenfleece.final_task.ps_reddit_comments_uk_{}` LIMIT {}"
+    ).format(year, rows)
 
     return client.query(sql).to_dataframe()
