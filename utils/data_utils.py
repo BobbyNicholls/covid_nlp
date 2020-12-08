@@ -40,7 +40,7 @@ def import_reddit10k():
     return raw_text_df
 
 
-def import_reddit_set(year, rows):
+def import_reddit_set(year=2019, rows=999999):
     """
     Get the set of reddit comments uploaded by Alex Cave
     :return:
