@@ -7,6 +7,7 @@ import datetime
 from datetime import datetime as dt
 from dateutil.relativedelta import *
 
+from utils.data_utils import import_reddit_set, import_uk_confidence
 
 from utils.text_analysis_transformers import RemovePunctuation, RemoveNonAscii
 from utils.text_analysis_transformers import NltkWordTokenizer, WordLemmatizer
@@ -45,31 +46,16 @@ word_frequency_pipe = Pipeline([
 
 
 ## Load in the reddit data:
-reddit = pd.read_csv('data/reddit10k.csv')
-reddit.date = pd.to_datetime(reddit.date)
+reddit = import_reddit_set(rows=4000000)
+reddit['date'] = pd.to_datetime(reddit['date'])
 reddit.set_index('date', inplace=True)
 
-# Ah, awkward. Only one month of data. Will demo with days.
+# Investigate number of months in the dataset
 pd.value_counts(reddit.index.month)
-reddit['day'] = reddit.index.day
+reddit['month'] = reddit.index.month
 
-preprocessed = [word_frequency_pipe.fit_transform(reddit.loc[reddit.day == day])
-                for day in pd.unique(reddit.index.day)]
+preprocessed = [word_frequency_pipe.fit_transform(reddit.loc[reddit.month == month])
+                for month in pd.unique(reddit.index.month)]
 
-# Import the outcome variable and preprocess
-def import_uk_confidence():
-    all_confidence = pd.read_csv('data/consumer_confidence_index.csv',
-                               usecols=['TIME', 'Value', 'LOCATION'])
-
-    uk_confidence = all_confidence.loc[all_confidence.LOCATION == "GBR"]
-
-    assert all(pd.value_counts(uk_confidence.TIME) == 1), "duplicate entries for the same time period"
-
-    date = pd.to_datetime(uk_confidence.TIME, format="%Y-%m")
-
-    # clean dataframe:
-    df = pd.DataFrame({'date': date, 'value': uk_confidence.Value})
-
-    return df
-
+# Import the outcome variable
 y = import_uk_confidence()

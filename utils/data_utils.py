@@ -40,7 +40,7 @@ def import_reddit10k():
     return raw_text_df
 
 
-def import_reddit_set(rows):
+def import_reddit_set(year=2019, rows=999999):
     """
     Get the set of reddit comments uploaded by Alex Cave
     :return:
@@ -48,7 +48,26 @@ def import_reddit_set(rows):
     """
     client = bigquery.Client()
     sql = (
-        "SELECT body, date FROM `goldenfleece.vaccine_poc.ps_reddit_comments_vaccine` LIMIT {}"
-    ).format(rows)
+        "SELECT body, TIMESTAMP_SECONDS(created_utc) as date FROM `goldenfleece.final_task.ps_reddit_comments_uk_{}` LIMIT {}"
+    ).format(year, rows)
 
     return client.query(sql).to_dataframe()
+
+
+def import_uk_confidence() -> pd.DataFrame:
+    """
+    Returns the GBR consumer confidence index values
+    """
+    all_confidence = pd.read_csv('data/consumer_confidence_index.csv',
+                               usecols=['TIME', 'Value', 'LOCATION'])
+
+    uk_confidence = all_confidence.loc[all_confidence.LOCATION == "GBR"]
+
+    assert all(pd.value_counts(uk_confidence.TIME) == 1), "duplicate entries for the same time period"
+
+    date = pd.to_datetime(uk_confidence.TIME, format="%Y-%m")
+
+    # clean dataframe:
+    df = pd.DataFrame({'date': date, 'value': uk_confidence.Value})
+
+    return df
