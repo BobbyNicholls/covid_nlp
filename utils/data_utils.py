@@ -44,7 +44,7 @@ def import_reddit_set(year=2019, rows=999999):
     """
     Get the set of reddit comments uploaded by Alex Cave
     :return:
-        dataframe of 'rows' rows of the dataset containing the body ofthe comment and date fields
+        dataframe of 'rows' rows of the dataset containing the body of the comment and date fields
     """
     client = bigquery.Client()
     sql = (
@@ -52,3 +52,22 @@ def import_reddit_set(year=2019, rows=999999):
     ).format(year, rows)
 
     return client.query(sql).to_dataframe()
+
+
+def import_uk_confidence() -> pd.DataFrame:
+    """
+    Returns the GBR consumer confidence index values
+    """
+    all_confidence = pd.read_csv('data/consumer_confidence_index.csv',
+                               usecols=['TIME', 'Value', 'LOCATION'])
+
+    uk_confidence = all_confidence.loc[all_confidence.LOCATION == "GBR"]
+
+    assert all(pd.value_counts(uk_confidence.TIME) == 1), "duplicate entries for the same time period"
+
+    date = pd.to_datetime(uk_confidence.TIME, format="%Y-%m")
+
+    # clean dataframe:
+    df = pd.DataFrame({'date': date, 'value': uk_confidence.Value})
+
+    return df
