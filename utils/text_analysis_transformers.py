@@ -14,17 +14,16 @@ import re
 
 
 class NltkWordTokenizer(BaseEstimator, TransformerMixin):
-
     def __init__(self):
         pass
 
-    def fit(self, X, y= None, **fit_params):
+    def fit(self, X, y=None, **fit_params):
         return self
 
-    def transform(self, X, y= None, **fit_params):
+    def transform(self, X, y=None, **fit_params):
         return [word_tokenize(i) for i in X]
 
-    def fit_transform(self, X, y= None):
+    def fit_transform(self, X, y=None):
         return self.transform(X)
 
 
@@ -62,8 +61,8 @@ class RemoveNonAscii(BaseEstimator, TransformerMixin):
         for word in X:
             new_word = (
                 unicodedata.normalize("NFKD", word)
-                    .encode("ascii", "ignore")
-                    .decode("utf-8", "ignore")
+                .encode("ascii", "ignore")
+                .decode("utf-8", "ignore")
             )
             new_words.append(new_word)
         return new_words
