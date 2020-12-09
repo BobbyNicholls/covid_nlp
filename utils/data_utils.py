@@ -54,23 +54,54 @@ def import_reddit_set(year=2019, rows=999999):
     return client.query(sql).to_dataframe()
 
 
-def import_uk_confidence() -> pd.DataFrame:
-    """
-    Returns the GBR consumer confidence index values
-    """
-    all_confidence = pd.read_csv(
-        "data/consumer_confidence_index.csv", usecols=["TIME", "Value", "LOCATION"]
-    )
+def import_uk_confidence():
+    all_confidence = pd.read_csv('data/consumer_confidence_index.csv',
+                               usecols=['TIME', 'Value', 'LOCATION'])
 
-    uk_confidence = all_confidence.loc[all_confidence["LOCATION"] == "GBR"]
+    uk_confidence = all_confidence.loc[all_confidence.LOCATION == "GBR"]
 
-    assert all(
-        pd.value_counts(uk_confidence["TIME"]) == 1
-    ), "duplicate entries for the same time period"
+    assert all(pd.value_counts(uk_confidence.TIME) == 1), "duplicate entries for the same time period"
 
-    date = pd.to_datetime(uk_confidence["TIME"], format="%Y-%m")
+    date = pd.to_datetime(uk_confidence.TIME, format="%Y-%m")
 
     # clean dataframe:
-    df = pd.DataFrame({"date": date, "value": uk_confidence.Value})
+    df = pd.DataFrame({'date': date, 'confidence': uk_confidence.Value})
+    df['date'] = df['date'].dt.to_period("M")
+    df = df.set_index(['date'], drop=True)
 
     return df
+
+
+def replace_quarterly(row):
+    if row["Title"].endswith("Q1"):
+        return row["Title"].replace(" Q1", "-01-01")
+    elif row["Title"].endswith("Q2"):
+        return row["Title"].replace(" Q2", "-04-01")
+    elif row["Title"].endswith("Q3"):
+        return row["Title"].replace(" Q3", "-07-01")
+    elif row["Title"].endswith("Q4"):
+        return row["Title"].replace(" Q4", "-10-01")
+
+
+def import_household_savings() -> pd.DataFrame:
+    """
+    Returns UK household savings ratios
+    """
+    household_savings_df = pd.read_csv("data/household_savings_ratio.csv")
+    household_savings_df["quarterly_data"] = [
+        True if "Q" in x else False for x in household_savings_df["Title"]
+    ]
+    household_savings_df = household_savings_df[
+        household_savings_df["quarterly_data"] == True
+    ]
+    household_savings_df["date"] = pd.to_datetime(
+        household_savings_df.apply(replace_quarterly, axis=1)
+    ).dt.to_period("M")
+    household_savings_df = household_savings_df.set_index("date").resample("M").ffill()
+    household_savings_df = household_savings_df.rename(
+        {
+            "Households (S.14): Households' saving ratio (per cent): Current price: £m: SA": "savings_ratio"
+        },
+        axis=1,
+    )
+    return household_savings_df[["savings_ratio"]]
