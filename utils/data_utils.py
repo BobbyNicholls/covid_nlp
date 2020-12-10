@@ -58,11 +58,12 @@ def import_uk_confidence():
     all_confidence = pd.read_csv('data/consumer_confidence_index.csv',
                                usecols=['TIME', 'Value', 'LOCATION'])
 
-    uk_confidence = all_confidence.loc[all_confidence.LOCATION == "GBR"]
+    uk_confidence = all_confidence.loc[all_confidence['LOCATION'] == "GBR"]
 
-    assert all(pd.value_counts(uk_confidence.TIME) == 1), "duplicate entries for the same time period"
+    assert all(pd.value_counts(uk_confidence['TIME'] == 1)), "duplicate entries for the same time period"
 
-    date = pd.to_datetime(uk_confidence.TIME, format="%Y-%m")
+    date = pd.to_datetime(uk_confidence['TIME'], format="%Y-%m")
+
 
     # clean dataframe:
     df = pd.DataFrame({'date': date, 'confidence': uk_confidence.Value})
