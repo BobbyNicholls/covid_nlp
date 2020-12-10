@@ -21,21 +21,74 @@ from utils.data_utils import import_reddit_set, import_uk_confidence
 
 
 from sklearn.feature_extraction.text import TfidfTransformer
+
+from google.cloud import bigquery
+
+
+def get_tone_vocab():
+    """
+    load the tone based words from Alex's work to use
+    as the columns for the word freq counter.
+    """
+    client = bigquery.Client(location="US", project="goldenfleece")
+
+    query = """
+        SELECT *
+        FROM final_task.alltones
+    """
+    query_job = client.query(
+        query,
+        # Location must match that of the dataset(s) referenced in the query.
+        location="US",
+        project='goldenfleece'
+    )  # API request - starts the query
+
+    all_tones_words = query_job.to_dataframe()
+    
+    unique_words = all_tones_words.drop_duplicates('words', ignore_index=True)
+    unique_words_dict = unique_words['words'].to_dict()
+    
+    # mapping needs to be reversed for the sklearn countvectorizer!
+    vocab = {v: k for k, v in unique_words_dict.items()}
+    
+    return vocab
+
+
+vocab = get_tone_vocab()
+
+reddit = import_reddit_set(rows=999999)
+reddit['date'] = reddit['date'].dt.to_period("M")
+reddit.set_index('date', inplace=True)
+
+reddit.head()
+
+
+def get_list_of_monthly_text()
+    months_of_text = []
+    index = []
+    for month in pd.unique(reddit.index):
+
+        month_of_text = ''.join(reddit.loc[month, 'body'].values.tolist())
+
+        # remove digits..
+        month_of_text = ''.join(i for i in month_of_text if not i.isdigit())
+
+        months_of_text.append(month_of_text)
+        index.append(month)
+        
+    return index, month
+
+index, months_of_text = get_list_of_monthly_text()
+
 word_frequency_pipe = Pipeline([
     ('remove_non_ascii', RemoveNonAscii()),
     ('remove_punctuation', RemovePunctuation()),
     ('lemmatize', WordLemmatizer()),
     ('count_vec', CountVectorizer(stop_words='english',
                                   lowercase=True,
-                                  #preprocessor=None,  # already done above
-                                  #tokenizer=None,  # nltk_word_tokenizer works here, but let's try without first.
                                   ngram_range=(1, 3), # this is very memory expensive!
-                                  #max_features=2000, # this stops it crashing with memory error..
-                                  #vocabulary= , # helpful, we should enter alex's vocab here!
-                                  #binary=False,
-                                  #encoding='ascii',
-                                  #strip_accents=None)
-                                    ))
+                                  vocabulary= vocab)
+                                    )
                                 ])
 
 word_tfidf_pipe = Pipeline([
@@ -44,60 +97,17 @@ word_tfidf_pipe = Pipeline([
     ('lemmatize', WordLemmatizer()),
     ('count_vec', CountVectorizer(stop_words='english',
                                   lowercase=True,
-                                  max_features=5000)),
+                                  vocabulary= vocab)),
      ('tfidf', TfidfTransformer()),
                                 ])
 
 
-
-reddit = import_reddit_set(rows=999999)
-reddit['date'] = reddit['date'].dt.to_period("M")
-reddit.head()
-
-reddit.set_index('date', inplace=True)
-
-reddit.head()
-pd.unique(reddit.index)
+def get_results(pipeline_transformer: Pipeline, text: list) -> pd.DataFrame:
+    matrix = pipeline_transformer.fit_transform(text)
+    
+    return pd.DataFrame(matrix.toarray(), columns= pipeline_transformer['count_vec'].get_feature_names(), index=index)
 
 
-months_of_text = []
-index = []
-for month in pd.unique(reddit.index):
+word_frequency_result = get_results(word_frequency_pipe, months_of_text)
+tfidf_result = get_results(word_tfidf_pipe, months_of_text)
 
-    month_of_text = ''.join(reddit.loc[month, 'body'].values.tolist())
-
-    # remove digits..
-    month_of_text = ''.join(i for i in month_of_text if not i.isdigit())
-
-    months_of_text.append(month_of_text)
-    index.append(month)
-
-
-# For demonstration purposes..
-transformer = CountVectorizer()
-matrix = transformer.fit_transform(months_of_text)
-result = pd.DataFrame(matrix.toarray(), columns= transformer.get_feature_names(), index=index)
-result.head(12)
-
-"""
-# Now have word vectors across reddit for each month!
-To do: use alex's list of words as the vocabulary for the CountVectorizer
-
-**This is located under BigQuery -> GoldenFleece -> finaltask -> alltones**
-
-word_frequency_pipe = Pipeline([
-    ('remove_non_ascii', RemoveNonAscii()),
-    ('remove_punctuation', RemovePunctuation()),
-    ('lemmatize', WordLemmatizer()),
-    ('count_vec', CountVectorizer(stop_words='english',
-                                  lowercase=True
-                                  vocabulary= IMPORTED_ALLTONES WORDS))
-                                ])
-
-
-"""
-
-## GCP is refusing to run any intensive code right now.
-#matrix_full_pipeline = word_frequency_pipe.fit_transform(months_of_text)
-
-#matrix_tfidf = word_tfidf_pipe.fit_transform(months_of_text)
